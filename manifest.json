@@ -1,0 +1,7 @@
+{
+  "name": "Lona",
+  "id": "760748029019286849",
+  "api": "1.0.0",
+  "main": "./dist/code.js",
+  "ui": "./dist/ui.html"
+}

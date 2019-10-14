@@ -1,0 +1,5 @@
+query getInstallationToken($repo: String!) {
+  getRepo(url: $repo) {
+    installationToken
+  }
+}

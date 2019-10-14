@@ -1,0 +1,11 @@
+query {
+  getMe {
+    organisations {
+      name
+      id
+      repos {
+        url
+      }
+    }
+  }
+}
