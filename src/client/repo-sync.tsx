@@ -7,17 +7,19 @@ import { ConvertedWorkspace } from "../tokens";
 
 export const RepoSync = ({
   repo,
-  token
+  token,
+  organisation
 }: {
   repo: { url: string };
   token: string;
+  organisation: { name: string; id: string; repos: { url: string }[] };
 }) => {
   const [githubError, setGithubError] = React.useState(null);
   const [githubLoading, setGithubLoading] = React.useState(false);
 
   const [
     loadInstallationToken,
-    { called, loading, error, data, refetch }
+    { called, loading, error, refetch }
   ] = useLazyQuery<GetInstallationTokenType>(remoteAPI.getInstallationToken, {
     variables: { repo: repo.url },
     context: {
@@ -26,6 +28,10 @@ export const RepoSync = ({
       }
     },
     async onCompleted(data) {
+      if (githubLoading) {
+        console.log("already loading");
+        return;
+      }
       setGithubLoading(true);
       const github = new Octokit({ auth: data.getRepo.installationToken });
 
@@ -34,45 +40,29 @@ export const RepoSync = ({
         repo: repo.url.replace("https://github.com/", "").split("/")[1]
       };
 
-      const release = await github.repos.getLatestRelease(params);
+      try {
+        const release = await github.repos.getLatestRelease(params);
 
-      const flatTokens =
-        release && release.data && release.data.assets
-          ? release.data.assets.find(x => x.name === "tokens.json")
-          : undefined;
+        const tagName = release && release.data && release.data.tag_name;
 
-      if (!flatTokens) {
-        setGithubLoading(false);
-        setGithubError(
-          new Error("could not find the tokens in the latest release")
-        );
-        return;
-      }
-
-      const res = await github.repos.getReleaseAsset({
-        owner: repo.url.replace("https://github.com/", "").split("/")[0],
-        repo: repo.url.replace("https://github.com/", "").split("/")[1],
-        asset_id: flatTokens.id,
-        headers: {
-          Accept: "application/octet-stream"
+        if (!tagName) {
+          throw new Error("could not find the tag in the latest release");
         }
-      });
 
-      // @ts-ignore
-      const content: ConvertedWorkspace = JSON.parse(res.data);
+        const res: ConvertedWorkspace = await (
+          await fetch(
+            `${process.env.S3_URL}/${organisation.id}/refs/tags/${tagName}/flat-json.json`
+          )
+        ).json();
 
-      await figmaApi.importTokens(content);
-      setGithubLoading(false);
+        await figmaApi.importTokens(res);
+        setGithubLoading(false);
+      } catch (err) {
+        setGithubLoading(false);
+        setGithubError(err);
+      }
     }
   });
-
-  const onClick = () => {
-    if (called) {
-      refetch();
-    } else {
-      loadInstallationToken();
-    }
-  };
 
   if (loading || githubLoading) {
     return <p>Loading ...</p>;
@@ -82,10 +72,18 @@ export const RepoSync = ({
     return (
       <div>
         <pre>{JSON.stringify(error || githubError, null, "  ")}</pre>
-        <button onClick={onClick}>Try Again</button>
+        <button onClick={refetch}>Try Again</button>
       </div>
     );
   }
+
+  const onClick = () => {
+    if (called) {
+      refetch();
+    } else {
+      loadInstallationToken();
+    }
+  };
 
   return <button onClick={onClick}>Sync</button>;
 };

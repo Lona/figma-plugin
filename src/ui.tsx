@@ -19,7 +19,9 @@ const App = () => {
           <OrgSelection token={token}>
             {org => (
               <RepoSelection organisation={org}>
-                {repo => <RepoSync repo={repo} token={token} />}
+                {repo => (
+                  <RepoSync repo={repo} token={token} organisation={org} />
+                )}
               </RepoSelection>
             )}
           </OrgSelection>
