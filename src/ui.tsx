@@ -15,8 +15,8 @@ const App = () => {
     <ApolloProvider client={client}>
       <img src={logo} width={32} />
       <WithAuth>
-        {token => (
-          <OrgSelection token={token}>
+        {(token, setToken) => (
+          <OrgSelection token={token} setToken={setToken}>
             {org => (
               <RepoSelection organisation={org}>
                 {repo => (

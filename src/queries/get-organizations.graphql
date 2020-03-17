@@ -1,6 +1,6 @@
 query {
   getMe {
-    organisations {
+    organizations {
       name
       id
       repos {

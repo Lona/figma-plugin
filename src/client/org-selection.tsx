@@ -4,17 +4,19 @@ import { remoteAPI, GetOrgType } from "../remote-api";
 
 export const OrgSelection = ({
   token,
+  setToken,
   children
 }: {
   token: string;
-  children: (organisation: {
+  setToken: (token: string | null) => void;
+  children: (organization: {
     name: string;
     id: string;
     repos: { url: string }[];
   }) => React.ReactElement;
 }) => {
   const { loading, error, data } = useQuery<GetOrgType>(
-    remoteAPI.getOrganisations,
+    remoteAPI.getOrganizations,
     {
       context: {
         headers: {
@@ -27,17 +29,20 @@ export const OrgSelection = ({
   const [selectedOrg, setSelectedOrg] = React.useState(null);
 
   React.useEffect(() => {
-    if (data && data.getMe.organisations.length === 1) {
-      setSelectedOrg(data.getMe.organisations[0]);
+    if (data && data.getMe.organizations.length === 1) {
+      setSelectedOrg(data.getMe.organizations[0]);
     }
   }, [data]);
 
-  if (loading) {
-    return <p>Loading ...</p>;
-  }
+  React.useEffect(() => {
+    if (error) {
+      console.error(error);
+      setToken(null);
+    }
+  }, [error]);
 
-  if (error) {
-    return <pre>{JSON.stringify(error, null, "  ")}</pre>;
+  if (loading || error) {
+    return <p>Loading ...</p>;
   }
 
   if (!selectedOrg) {
@@ -45,7 +50,7 @@ export const OrgSelection = ({
       <div>
         <h1>select org</h1>
         <ul>
-          {data.getMe.organisations.map(org => (
+          {data.getMe.organizations.map(org => (
             <li key={org.id}>
               <a onClick={() => setSelectedOrg(org)}>{org.name}</a>
             </li>

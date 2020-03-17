@@ -1,28 +1,18 @@
 import * as React from "react";
-import { figmaApi } from "../figma-api";
+import useFigmaSetting from "figma-jsonrpc/hooks/useFigmaSetting";
 
 export const WithAuth = ({
   children
 }: {
-  children: (token: string) => React.ReactElement;
+  children: (
+    token: string,
+    setToken: (token: string | null) => void
+  ) => React.ReactElement;
 }) => {
-  const [loadingToken, setLoadingToken] = React.useState(true);
-  const [token, setToken] = React.useState(null);
   const [signingIn, setSigningIn] = React.useState(false);
-
-  React.useEffect(() => {
-    setLoadingToken(true);
-    figmaApi
-      .getToken()
-      .then(token => {
-        setToken(token);
-        setLoadingToken(false);
-      })
-      .catch(err => {
-        console.log(err);
-        setLoadingToken(false);
-      });
-  }, [false]);
+  const [token, error, loadingToken, setToken] = useFigmaSetting<string>(
+    "lona-token"
+  );
 
   const onSignin = () => {
     window.open(
@@ -37,7 +27,6 @@ export const WithAuth = ({
 
   const onPasteToken = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.currentTarget.value.trim();
-    figmaApi.setToken(value);
     setToken(value);
     setSigningIn(false);
   };
@@ -47,7 +36,7 @@ export const WithAuth = ({
   }
 
   if (token) {
-    return children(token);
+    return children(token, setToken);
   }
 
   if (signingIn) {

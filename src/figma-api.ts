@@ -1,4 +1,4 @@
-import methods from "figma-jsonrpc";
+import { createPluginAPI } from "figma-jsonrpc";
 import * as parseColor from "parse-color";
 import { ConvertedWorkspace } from "./tokens";
 
@@ -28,13 +28,7 @@ const FONT_WEIGHTS = {
 
 const dataKey = "importedTokens";
 
-export const figmaApi = methods({
-  setToken(token: string) {
-    return figma.clientStorage.setAsync("lona-token", token);
-  },
-  getToken() {
-    return figma.clientStorage.getAsync("lona-token");
-  },
+export const figmaApi = createPluginAPI({
   async importTokens(tokens: ConvertedWorkspace) {
     const existingLonaTokens: {
       id: string;

@@ -6,7 +6,7 @@ export const client = new ApolloClient({
 
 export type GetOrgType = {
   getMe: {
-    organisations: {
+    organizations: {
       name: string;
       id: string;
       repos: { url: string }[];
@@ -21,6 +21,6 @@ export type GetInstallationTokenType = {
 };
 
 export const remoteAPI = {
-  getOrganisations: require("./queries/get-organisations.graphql"),
+  getOrganizations: require("./queries/get-organizations.graphql"),
   getInstallationToken: require("./queries/get-installation-token.graphql")
 };
